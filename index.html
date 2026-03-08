@@ -6,25 +6,31 @@
   <title>문장 스피킹 연습 앱</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f5f7fb;
       color: #222;
     }
+
     .app {
-      max-width: 720px;
+      max-width: 760px;
       margin: 0 auto;
       padding: 20px;
     }
+
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
       gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
+
     h1, h2, h3, p { margin-top: 0; }
+
     .card {
       background: white;
       border-radius: 20px;
@@ -32,27 +38,33 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       margin-bottom: 16px;
     }
-    .big-button, .button {
+
+    .big-button,
+    .button {
       border: none;
       border-radius: 16px;
       cursor: pointer;
       font-size: 18px;
       font-weight: 700;
     }
+
     .big-button {
       width: 100%;
       padding: 26px 18px;
       margin-bottom: 14px;
     }
+
     .button {
       padding: 12px 16px;
       margin-right: 8px;
       margin-bottom: 8px;
     }
+
     .primary { background: #2563eb; color: white; }
     .secondary { background: #e5e7eb; color: #111827; }
     .danger { background: #dc2626; color: white; }
     .success { background: #16a34a; color: white; }
+    .warning { background: #f59e0b; color: white; }
 
     input, textarea {
       width: 100%;
@@ -64,7 +76,12 @@
     }
 
     .hidden { display: none; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
     .sentence-text {
       font-size: 28px;
@@ -123,6 +140,7 @@
 
     .center-box {
       flex: 1;
+      min-width: 120px;
       margin: 0;
       padding: 16px;
       text-align: center;
@@ -130,6 +148,36 @@
       border: 1px solid #e5e7eb;
       border-radius: 16px;
       background: white;
+    }
+
+    .user-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e40af;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .login-area {
+      text-align: center;
+      padding: 20px 0 10px;
+    }
+
+    .muted-box {
+      padding: 14px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 14px;
     }
 
     @media (max-width: 640px) {
@@ -142,11 +190,30 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <h1>문장 스피킹 연습</h1>
+      <div>
+        <h1>문장 스피킹 연습</h1>
+        <div class="small">Google 로그인 + Firestore 동기화 버전</div>
+      </div>
       <button class="button secondary" onclick="goToSentenceList()">문장 목록</button>
     </div>
 
-    <section id="homeScreen">
+    <div class="card" id="authCard">
+      <div id="loggedOutView" class="login-area">
+        <h2>로그인이 필요합니다</h2>
+        <p class="small">Google로 로그인하면 문장이 기기 간 동기화됩니다.</p>
+        <button class="big-button primary" onclick="signInWithGoogle()">Google로 로그인</button>
+      </div>
+
+      <div id="loggedInView" class="hidden">
+        <div class="user-box">
+          <span class="badge">로그인됨</span>
+          <div id="userInfo" class="small"></div>
+          <button class="button secondary" onclick="signOutUser()">로그아웃</button>
+        </div>
+      </div>
+    </div>
+
+    <section id="homeScreen" class="hidden">
       <div class="card">
         <button class="big-button primary" onclick="showScreen('inputScreen')">문장을 입력하세요</button>
         <button class="big-button success" onclick="startPractice()">문장 스피킹을 연습하세요</button>
@@ -156,12 +223,15 @@
     <section id="inputScreen" class="hidden">
       <div class="card">
         <h2>문장 입력</h2>
-        <textarea id="sentenceInput" rows="4" placeholder="예: We've got another one on the way."></textarea>
+        <div class="muted-box small">
+          예: I was going to call you yesterday, but I got caught up with work.
+        </div>
+        <textarea id="sentenceInput" rows="4" placeholder="연습하고 싶은 영어 문장을 입력하세요."></textarea>
         <div class="row">
           <button class="button primary" onclick="addSentence()">저장</button>
           <button class="button secondary" onclick="showScreen('homeScreen')">홈으로</button>
         </div>
-        <p class="small">입력한 문장은 active 상태로 저장되고, 100회 누적 시 archive로 이동합니다.</p>
+        <p class="small">입력한 문장은 active 상태로 저장되고, 누적 100회가 되면 archive로 이동합니다.</p>
       </div>
     </section>
 
@@ -175,16 +245,37 @@
 
         <div id="practiceContent" class="hidden">
           <div class="row" style="margin-bottom:12px;">
-            <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="toggleCaption()" id="captionToggleBtn">캡션 끄기</button>
+            <button
+              class="big-button secondary"
+              style="flex:1; margin-bottom:0; padding:18px 14px;"
+              onclick="toggleCaption()"
+              id="captionToggleBtn"
+            >
+              캡션 끄기
+            </button>
           </div>
 
           <div class="row" style="margin-bottom:12px; align-items:center;">
-            <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="changeSpeed(-0.1)">속도 -0.1</button>
+            <button
+              class="big-button secondary"
+              style="flex:1; margin-bottom:0; padding:18px 14px;"
+              onclick="changeSpeed(-0.1)"
+            >
+              속도 -0.1
+            </button>
+
             <div class="center-box">
               <div class="small">말하기 속도</div>
               <div id="speedDisplay" style="font-size:28px; font-weight:900;">0.9x</div>
             </div>
-            <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="changeSpeed(0.1)">속도 +0.1</button>
+
+            <button
+              class="big-button secondary"
+              style="flex:1; margin-bottom:0; padding:18px 14px;"
+              onclick="changeSpeed(0.1)"
+            >
+              속도 +0.1
+            </button>
           </div>
 
           <div class="sentence-text" id="practiceSentenceText"></div>
@@ -203,7 +294,10 @@
             <button class="button danger" onclick="stopPractice()">연습 종료</button>
           </div>
 
-          <p class="small">기본 동작: AI가 같은 문장을 2번 읽고, 따라 말할 시간을 준 뒤 1회 카운트합니다. 웹을 닫지 않으면 자동으로 계속 이어집니다.</p>
+          <p class="small">
+            기본 동작: AI가 같은 문장을 2번 읽고, 따라 말할 시간을 준 뒤 1회 카운트합니다.
+            웹을 닫지 않으면 자동으로 계속 이어집니다.
+          </p>
         </div>
       </div>
     </section>
@@ -221,9 +315,42 @@
     </section>
   </div>
 
-  <script>
-    const STORAGE_KEY = 'speaking_sentences_v1';
-    const APP_SETTINGS_KEY = 'speaking_app_settings_v1';
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      doc,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJP1-h3DPyG4tL4A1SiafZY3vW8DyBpAE",
+      authDomain: "minwoo-speaking-app.firebaseapp.com",
+      projectId: "minwoo-speaking-app",
+      storageBucket: "minwoo-speaking-app.firebasestorage.app",
+      messagingSenderId: "560097558920",
+      appId: "1:560097558920:web:74726892e54f11fd3eba3d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const APP_SETTINGS_KEY = "speaking_app_settings_v1";
 
     const SETTINGS = {
       roundsPerSession: 10,
@@ -233,6 +360,9 @@
       maxWaitMs: 12000,
       speechRate: 0.9
     };
+
+    let currentUser = null;
+    let sentencesCache = [];
 
     let practiceState = {
       isRunning: false,
@@ -247,6 +377,7 @@
       if (!raw) {
         return { speechRate: SETTINGS.speechRate, captionOn: true };
       }
+
       try {
         return JSON.parse(raw);
       } catch (e) {
@@ -258,117 +389,101 @@
       localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
     }
 
-    function getSentences() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveSentences(sentences) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sentences));
-    }
-
-    function generateId() {
-      return Date.now().toString() + Math.random().toString(36).slice(2, 8);
-    }
-
     function showScreen(screenId) {
-      ['homeScreen', 'inputScreen', 'practiceScreen', 'listScreen'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
+      const screens = ["homeScreen", "inputScreen", "practiceScreen", "listScreen"];
+      screens.forEach(id => {
+        document.getElementById(id).classList.add("hidden");
       });
-      document.getElementById(screenId).classList.remove('hidden');
+      document.getElementById(screenId).classList.remove("hidden");
     }
 
-    function addSentence() {
-      const input = document.getElementById('sentenceInput');
-      const text = input.value.trim();
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-      if (!text) {
-        alert('문장을 입력해 주세요.');
+    function updateAuthUI() {
+      const loggedOutView = document.getElementById("loggedOutView");
+      const loggedInView = document.getElementById("loggedInView");
+      const homeScreen = document.getElementById("homeScreen");
+      const userInfo = document.getElementById("userInfo");
+
+      if (currentUser) {
+        loggedOutView.classList.add("hidden");
+        loggedInView.classList.remove("hidden");
+        homeScreen.classList.remove("hidden");
+        userInfo.textContent = `${currentUser.displayName || "사용자"} · ${currentUser.email || ""}`;
+      } else {
+        loggedOutView.classList.remove("hidden");
+        loggedInView.classList.add("hidden");
+        homeScreen.classList.add("hidden");
+        showScreen("homeScreen");
+      }
+    }
+
+    async function signInWithGoogle() {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error(error);
+        alert("로그인 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function signOutUser() {
+      try {
+        stopPractice();
+        await signOut(auth);
+        sentencesCache = [];
+        document.getElementById("sentenceListContainer").innerHTML = "";
+      } catch (error) {
+        console.error(error);
+        alert("로그아웃 중 오류가 발생했습니다.");
+      }
+    }
+
+    window.signInWithGoogle = signInWithGoogle;
+    window.signOutUser = signOutUser;
+
+    function getSentenceCollectionRef() {
+      if (!currentUser) throw new Error("로그인이 필요합니다.");
+      return collection(db, "users", currentUser.uid, "sentences");
+    }
+
+    async function loadSentencesFromFirestore() {
+      if (!currentUser) {
+        sentencesCache = [];
         return;
       }
 
-      const sentences = getSentences();
-      sentences.unshift({
-        id: generateId(),
-        text,
-        count: 0,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+      try {
+        const q = query(getSentenceCollectionRef(), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
 
-      saveSentences(sentences);
-      input.value = '';
-      alert('문장이 저장되었습니다.');
-      showScreen('homeScreen');
-    }
-
-    function goToSentenceList() {
-      showScreen('listScreen');
-      renderSentenceList('active');
-    }
-
-    function renderSentenceList(type) {
-      const container = document.getElementById('sentenceListContainer');
-      const sentences = getSentences().filter(s => s.status === type);
-
-      if (sentences.length === 0) {
-        container.innerHTML = `<p>${type === 'active' ? '연습 중인 문장이 없습니다.' : '아카이브 문장이 없습니다.'}</p>`;
-        return;
+        sentencesCache = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        }));
+      } catch (error) {
+        console.error(error);
+        alert("문장 불러오기 중 오류가 발생했습니다.");
       }
-
-      container.innerHTML = sentences.map(sentence => {
-        const progress = Math.min((sentence.count / SETTINGS.archiveAt) * 100, 100);
-        return `
-          <div class="list-item">
-            <div><strong>${escapeHtml(sentence.text)}</strong></div>
-            <div class="small">누적 발화: ${sentence.count} / ${SETTINGS.archiveAt}</div>
-            <div class="progress-wrap">
-              <div class="progress-bar" style="width:${progress}%"></div>
-            </div>
-            <div class="row">
-              ${
-                type === 'active'
-                  ? `<button class="button secondary" onclick="archiveSentence('${sentence.id}')">수동 아카이브</button>`
-                  : `<button class="button secondary" onclick="restoreSentence('${sentence.id}')">다시 active로</button>`
-              }
-              <button class="button danger" onclick="deleteSentence('${sentence.id}', '${type}')">삭제</button>
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
-    function archiveSentence(id) {
-      const sentences = getSentences().map(s =>
-        s.id === id ? { ...s, status: 'archive', updatedAt: new Date().toISOString() } : s
-      );
-      saveSentences(sentences);
-      renderSentenceList('active');
+    function getSentences() {
+      return sentencesCache;
     }
 
-    function restoreSentence(id) {
-      const sentences = getSentences().map(s =>
-        s.id === id ? { ...s, status: 'active', updatedAt: new Date().toISOString() } : s
-      );
-      saveSentences(sentences);
-      renderSentenceList('archive');
-    }
-
-    function deleteSentence(id, type) {
-      if (!confirm('이 문장을 삭제할까요?')) return;
-      const sentences = getSentences().filter(s => s.id !== id);
-      saveSentences(sentences);
-      renderSentenceList(type);
+    function getSentenceById(id) {
+      return sentencesCache.find(s => s.id === id) || null;
     }
 
     function getActiveSentences() {
-      return getSentences().filter(s => s.status === 'active');
+      return sentencesCache.filter(s => s.status === "active");
     }
 
     function pickRandomSentence() {
@@ -378,42 +493,144 @@
       return active[randomIndex];
     }
 
-    function startPractice() {
-      showScreen('practiceScreen');
-      updatePracticeControls();
-
-      const sentence = pickRandomSentence();
-      const empty = document.getElementById('practiceEmpty');
-      const content = document.getElementById('practiceContent');
-
-      if (!sentence) {
-        empty.classList.remove('hidden');
-        content.classList.add('hidden');
+    async function addSentence() {
+      if (!currentUser) {
+        alert("먼저 로그인해 주세요.");
         return;
       }
 
-      empty.classList.add('hidden');
-      content.classList.remove('hidden');
+      const input = document.getElementById("sentenceInput");
+      const text = input.value.trim();
 
-      practiceState.isRunning = true;
-      practiceState.currentSentenceId = sentence.id;
-      practiceState.currentRound = 0;
+      if (!text) {
+        alert("문장을 입력해 주세요.");
+        return;
+      }
 
-      renderPracticeSentence(sentence);
-      runPracticeRound();
+      try {
+        await addDoc(getSentenceCollectionRef(), {
+          text,
+          count: 0,
+          status: "active",
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        });
+
+        input.value = "";
+        await loadSentencesFromFirestore();
+        alert("문장이 저장되었습니다.");
+        showScreen("homeScreen");
+      } catch (error) {
+        console.error(error);
+        alert("문장 저장 중 오류가 발생했습니다.");
+      }
     }
+
+    window.addSentence = addSentence;
+
+    function goToSentenceList() {
+      showScreen("listScreen");
+      renderSentenceList("active");
+    }
+
+    window.goToSentenceList = goToSentenceList;
+
+    function renderSentenceList(type) {
+      const container = document.getElementById("sentenceListContainer");
+      const sentences = getSentences().filter(s => s.status === type);
+
+      if (sentences.length === 0) {
+        container.innerHTML = `<p>${type === "active" ? "연습 중인 문장이 없습니다." : "아카이브 문장이 없습니다."}</p>`;
+        return;
+      }
+
+      container.innerHTML = sentences.map(sentence => {
+        const progress = Math.min((sentence.count / SETTINGS.archiveAt) * 100, 100);
+
+        return `
+          <div class="list-item">
+            <div><strong>${escapeHtml(sentence.text)}</strong></div>
+            <div class="small">누적 발화: ${sentence.count} / ${SETTINGS.archiveAt}</div>
+            <div class="progress-wrap">
+              <div class="progress-bar" style="width:${progress}%"></div>
+            </div>
+            <div class="row">
+              ${
+                type === "active"
+                  ? `<button class="button secondary" onclick="archiveSentence('${sentence.id}')">수동 아카이브</button>`
+                  : `<button class="button secondary" onclick="restoreSentence('${sentence.id}')">다시 active로</button>`
+              }
+              <button class="button danger" onclick="deleteSentence('${sentence.id}', '${type}')">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.renderSentenceList = renderSentenceList;
+
+    async function archiveSentence(id) {
+      try {
+        const targetRef = doc(db, "users", currentUser.uid, "sentences", id);
+        await updateDoc(targetRef, {
+          status: "archive",
+          updatedAt: Date.now()
+        });
+
+        await loadSentencesFromFirestore();
+        renderSentenceList("active");
+      } catch (error) {
+        console.error(error);
+        alert("아카이브 처리 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function restoreSentence(id) {
+      try {
+        const targetRef = doc(db, "users", currentUser.uid, "sentences", id);
+        await updateDoc(targetRef, {
+          status: "active",
+          updatedAt: Date.now()
+        });
+
+        await loadSentencesFromFirestore();
+        renderSentenceList("archive");
+      } catch (error) {
+        console.error(error);
+        alert("복원 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function deleteSentence(id, type) {
+      if (!confirm("이 문장을 삭제할까요?")) return;
+
+      try {
+        const targetRef = doc(db, "users", currentUser.uid, "sentences", id);
+        await deleteDoc(targetRef);
+        await loadSentencesFromFirestore();
+        renderSentenceList(type);
+      } catch (error) {
+        console.error(error);
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
+
+    window.archiveSentence = archiveSentence;
+    window.restoreSentence = restoreSentence;
+    window.deleteSentence = deleteSentence;
 
     function renderPracticeSentence(sentence) {
       const appSettings = getAppSettings();
-      const textEl = document.getElementById('practiceSentenceText');
-      textEl.textContent = appSettings.captionOn ? sentence.text : '캡션이 꺼져 있습니다';
-      document.getElementById('practiceMeta').textContent = `누적 발화 ${sentence.count} / ${SETTINGS.archiveAt}`;
-      document.getElementById('roundCounter').textContent = `${practiceState.currentRound} / ${SETTINGS.roundsPerSession}`;
-      document.getElementById('practiceProgressBar').style.width =
+      const textEl = document.getElementById("practiceSentenceText");
+
+      textEl.textContent = appSettings.captionOn ? sentence.text : "캡션이 꺼져 있습니다";
+      document.getElementById("practiceMeta").textContent = `누적 발화 ${sentence.count} / ${SETTINGS.archiveAt}`;
+      document.getElementById("roundCounter").textContent = `${practiceState.currentRound} / ${SETTINGS.roundsPerSession}`;
+      document.getElementById("practiceProgressBar").style.width =
         `${Math.min((sentence.count / SETTINGS.archiveAt) * 100, 100)}%`;
 
       const remaining = Math.max(SETTINGS.archiveAt - sentence.count, 0);
-      document.getElementById('sessionInfo').textContent =
+      document.getElementById("sessionInfo").textContent =
         `이번 문장 ${practiceState.currentRound}/${SETTINGS.roundsPerSession}회 · 아카이브까지 ${remaining}회 남음`;
     }
 
@@ -425,8 +642,8 @@
     }
 
     function speakText(text, onEnd) {
-      if (!('speechSynthesis' in window)) {
-        alert('이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬을 권장합니다.');
+      if (!("speechSynthesis" in window)) {
+        alert("이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬을 권장합니다.");
         if (onEnd) onEnd();
         return;
       }
@@ -435,7 +652,7 @@
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
+      utterance.lang = "en-US";
       utterance.rate = appSettings.speechRate;
       utterance.onend = function () {
         if (onEnd) onEnd();
@@ -445,13 +662,42 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    function runPracticeRound() {
+    async function incrementSentenceCount(id) {
+      const sentence = getSentenceById(id);
+      if (!sentence) return;
+
+      const newCount = sentence.count + 1;
+      const nextStatus = newCount >= SETTINGS.archiveAt ? "archive" : "active";
+
+      try {
+        const targetRef = doc(db, "users", currentUser.uid, "sentences", id);
+        await updateDoc(targetRef, {
+          count: newCount,
+          status: nextStatus,
+          updatedAt: Date.now()
+        });
+
+        const idx = sentencesCache.findIndex(s => s.id === id);
+        if (idx > -1) {
+          sentencesCache[idx] = {
+            ...sentencesCache[idx],
+            count: newCount,
+            status: nextStatus,
+            updatedAt: Date.now()
+          };
+        }
+      } catch (error) {
+        console.error(error);
+        alert("카운트 저장 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function runPracticeRound() {
       if (!practiceState.isRunning) return;
 
-      const sentences = getSentences();
-      const sentence = sentences.find(s => s.id === practiceState.currentSentenceId);
+      const sentence = getSentenceById(practiceState.currentSentenceId);
 
-      if (!sentence || sentence.status !== 'active') {
+      if (!sentence || sentence.status !== "active") {
         moveToNextSentence();
         return;
       }
@@ -461,7 +707,7 @@
         return;
       }
 
-      document.getElementById('practiceStatus').textContent = 'AI가 문장을 2번 읽는 중...';
+      document.getElementById("practiceStatus").textContent = "AI가 문장을 2번 읽는 중...";
       renderPracticeSentence(sentence);
 
       speakText(sentence.text, function () {
@@ -473,18 +719,21 @@
           speakText(sentence.text, function () {
             if (!practiceState.isRunning) return;
 
-            document.getElementById('practiceStatus').textContent = '이제 따라 말하세요...';
+            document.getElementById("practiceStatus").textContent = "이제 따라 말하세요...";
             const waitMs = estimateWaitMs(sentence.text);
 
-            practiceState.timeoutId = setTimeout(function () {
+            practiceState.timeoutId = setTimeout(async function () {
               if (!practiceState.isRunning) return;
 
               practiceState.currentRound += 1;
-              incrementSentenceCount(sentence.id);
+              await incrementSentenceCount(sentence.id);
 
-              const updatedSentence = getSentences().find(s => s.id === sentence.id);
-              renderPracticeSentence(updatedSentence);
-              document.getElementById('practiceStatus').textContent = '1회 카운트 완료';
+              const updatedSentence = getSentenceById(sentence.id);
+              if (updatedSentence) {
+                renderPracticeSentence(updatedSentence);
+              }
+
+              document.getElementById("practiceStatus").textContent = "1회 카운트 완료";
 
               if (practiceState.currentRound >= SETTINGS.roundsPerSession) {
                 setTimeout(function () {
@@ -501,60 +750,11 @@
       });
     }
 
-    function incrementSentenceCount(id) {
-      const sentences = getSentences().map(s => {
-        if (s.id !== id) return s;
-        const newCount = s.count + 1;
-        return {
-          ...s,
-          count: newCount,
-          status: newCount >= SETTINGS.archiveAt ? 'archive' : 'active',
-          updatedAt: new Date().toISOString()
-        };
-      });
-
-      saveSentences(sentences);
-    }
-
-    function moveToNextSentence() {
-      const nextSentence = pickRandomSentence();
-
-      if (!nextSentence) {
-        stopPractice();
-        alert('모든 active 문장이 아카이브되었거나 연습할 문장이 없습니다.');
-        showScreen('homeScreen');
-        return;
-      }
-
-      practiceState.currentSentenceId = nextSentence.id;
-      practiceState.currentRound = 0;
-      renderPracticeSentence(nextSentence);
-      runPracticeRound();
-    }
-
-    function stopPractice() {
-      practiceState.isRunning = false;
-      practiceState.currentRound = 0;
-      practiceState.currentSentenceId = null;
-
-      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-      showScreen('homeScreen');
-    }
-
-    function skipSentence() {
-      if (!practiceState.isRunning) return;
-      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      moveToNextSentence();
-    }
-
     function updatePracticeControls() {
       const appSettings = getAppSettings();
-      document.getElementById('speedDisplay').textContent = `${appSettings.speechRate.toFixed(1)}x`;
-      document.getElementById('captionToggleBtn').textContent =
-        appSettings.captionOn ? '캡션 끄기' : '캡션 켜기';
+      document.getElementById("speedDisplay").textContent = `${appSettings.speechRate.toFixed(1)}x`;
+      document.getElementById("captionToggleBtn").textContent =
+        appSettings.captionOn ? "캡션 끄기" : "캡션 켜기";
     }
 
     function changeSpeed(delta) {
@@ -571,18 +771,92 @@
       saveAppSettings(appSettings);
       updatePracticeControls();
 
-      const sentence = getSentences().find(s => s.id === practiceState.currentSentenceId);
+      const sentence = getSentenceById(practiceState.currentSentenceId);
       if (sentence) renderPracticeSentence(sentence);
     }
 
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    function startPractice() {
+      if (!currentUser) {
+        alert("먼저 로그인해 주세요.");
+        return;
+      }
+
+      showScreen("practiceScreen");
+      updatePracticeControls();
+
+      const sentence = pickRandomSentence();
+      const empty = document.getElementById("practiceEmpty");
+      const content = document.getElementById("practiceContent");
+
+      if (!sentence) {
+        empty.classList.remove("hidden");
+        content.classList.add("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      content.classList.remove("hidden");
+
+      practiceState.isRunning = true;
+      practiceState.currentSentenceId = sentence.id;
+      practiceState.currentRound = 0;
+
+      renderPracticeSentence(sentence);
+      runPracticeRound();
     }
+
+    function stopPractice() {
+      practiceState.isRunning = false;
+      practiceState.currentRound = 0;
+      practiceState.currentSentenceId = null;
+
+      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+      showScreen("homeScreen");
+    }
+
+    function skipSentence() {
+      if (!practiceState.isRunning) return;
+      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      moveToNextSentence();
+    }
+
+    function moveToNextSentence() {
+      const nextSentence = pickRandomSentence();
+
+      if (!nextSentence) {
+        stopPractice();
+        alert("모든 active 문장이 아카이브되었거나 연습할 문장이 없습니다.");
+        showScreen("homeScreen");
+        return;
+      }
+
+      practiceState.currentSentenceId = nextSentence.id;
+      practiceState.currentRound = 0;
+      renderPracticeSentence(nextSentence);
+      runPracticeRound();
+    }
+
+    window.showScreen = showScreen;
+    window.startPractice = startPractice;
+    window.stopPractice = stopPractice;
+    window.skipSentence = skipSentence;
+    window.changeSpeed = changeSpeed;
+    window.toggleCaption = toggleCaption;
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      updateAuthUI();
+
+      if (currentUser) {
+        await loadSentencesFromFirestore();
+        showScreen("homeScreen");
+      } else {
+        sentencesCache = [];
+      }
+    });
 
     updatePracticeControls();
   </script>
