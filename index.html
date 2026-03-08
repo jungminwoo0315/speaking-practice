@@ -22,6 +22,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      gap: 10px;
     }
     h1, h2, h3, p { margin-top: 0; }
     .card {
@@ -52,6 +53,7 @@
     .secondary { background: #e5e7eb; color: #111827; }
     .danger { background: #dc2626; color: white; }
     .success { background: #16a34a; color: white; }
+
     input, textarea {
       width: 100%;
       padding: 14px;
@@ -60,19 +62,24 @@
       font-size: 16px;
       margin-bottom: 12px;
     }
+
     .hidden { display: none; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
     .sentence-text {
       font-size: 28px;
       line-height: 1.4;
       font-weight: 800;
       margin-bottom: 14px;
+      word-break: break-word;
     }
+
     .meta {
       font-size: 15px;
       color: #4b5563;
       margin-bottom: 10px;
     }
+
     .progress-wrap {
       width: 100%;
       height: 12px;
@@ -81,11 +88,13 @@
       overflow: hidden;
       margin: 10px 0 16px;
     }
+
     .progress-bar {
       height: 100%;
       background: #2563eb;
       width: 0%;
     }
+
     .list-item {
       border: 1px solid #e5e7eb;
       border-radius: 14px;
@@ -93,20 +102,40 @@
       margin-bottom: 10px;
       background: #fff;
     }
+
     .small {
       font-size: 14px;
       color: #6b7280;
     }
+
     .status {
       font-size: 18px;
       font-weight: 700;
       margin-top: 10px;
       color: #1f2937;
     }
+
     .count-big {
       font-size: 42px;
       font-weight: 900;
       margin: 12px 0;
+    }
+
+    .center-box {
+      flex: 1;
+      margin: 0;
+      padding: 16px;
+      text-align: center;
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: white;
+    }
+
+    @media (max-width: 640px) {
+      .sentence-text { font-size: 24px; }
+      .count-big { font-size: 36px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
     }
   </style>
 </head>
@@ -139,33 +168,41 @@
     <section id="practiceScreen" class="hidden">
       <div class="card">
         <h2>스피킹 연습</h2>
+
         <div id="practiceEmpty" class="hidden">
           <p>연습할 active 문장이 없습니다. 먼저 문장을 입력해 주세요.</p>
         </div>
+
         <div id="practiceContent" class="hidden">
           <div class="row" style="margin-bottom:12px;">
             <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="toggleCaption()" id="captionToggleBtn">캡션 끄기</button>
           </div>
+
           <div class="row" style="margin-bottom:12px; align-items:center;">
             <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="changeSpeed(-0.1)">속도 -0.1</button>
-            <div class="card" style="flex:1; margin:0; padding:16px; text-align:center; box-shadow:none; border:1px solid #e5e7eb;">
+            <div class="center-box">
               <div class="small">말하기 속도</div>
               <div id="speedDisplay" style="font-size:28px; font-weight:900;">0.9x</div>
             </div>
             <button class="big-button secondary" style="flex:1; margin-bottom:0; padding:18px 14px;" onclick="changeSpeed(0.1)">속도 +0.1</button>
           </div>
+
           <div class="sentence-text" id="practiceSentenceText"></div>
           <div class="meta" id="practiceMeta"></div>
+
           <div class="progress-wrap">
             <div class="progress-bar" id="practiceProgressBar"></div>
           </div>
+
           <div class="status" id="practiceStatus">준비 중...</div>
           <div class="count-big" id="roundCounter">0 / 10</div>
           <div class="small" id="sessionInfo">이번 문장 세션 진행 중</div>
+
           <div class="row" style="margin-top:12px;">
             <button class="button secondary" onclick="skipSentence()">다음 문장으로 넘기기</button>
             <button class="button danger" onclick="stopPractice()">연습 종료</button>
           </div>
+
           <p class="small">기본 동작: AI가 같은 문장을 2번 읽고, 따라 말할 시간을 준 뒤 1회 카운트합니다. 웹을 닫지 않으면 자동으로 계속 이어집니다.</p>
         </div>
       </div>
@@ -186,8 +223,8 @@
 
   <script>
     const STORAGE_KEY = 'speaking_sentences_v1';
-    const STORAGE_KEY = 'speaking_sentences_v1';
     const APP_SETTINGS_KEY = 'speaking_app_settings_v1';
+
     const SETTINGS = {
       roundsPerSession: 10,
       archiveAt: 100,
@@ -212,7 +249,7 @@
       }
       try {
         return JSON.parse(raw);
-      } catch {
+      } catch (e) {
         return { speechRate: SETTINGS.speechRate, captionOn: true };
       }
     }
@@ -223,7 +260,12 @@
 
     function getSentences() {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return [];
+      }
     }
 
     function saveSentences(sentences) {
@@ -244,6 +286,7 @@
     function addSentence() {
       const input = document.getElementById('sentenceInput');
       const text = input.value.trim();
+
       if (!text) {
         alert('문장을 입력해 주세요.');
         return;
@@ -258,8 +301,8 @@
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
-      saveSentences(sentences);
 
+      saveSentences(sentences);
       input.value = '';
       alert('문장이 저장되었습니다.');
       showScreen('homeScreen');
@@ -289,8 +332,12 @@
               <div class="progress-bar" style="width:${progress}%"></div>
             </div>
             <div class="row">
-              ${type === 'active' ? `<button class="button secondary" onclick="archiveSentence('${sentence.id}')">수동 아카이브</button>` : `<button class="button secondary" onclick="restoreSentence('${sentence.id}')">다시 active로</button>`}
-              <button class="button danger" onclick="deleteSentence('${sentence.id}')">삭제</button>
+              ${
+                type === 'active'
+                  ? `<button class="button secondary" onclick="archiveSentence('${sentence.id}')">수동 아카이브</button>`
+                  : `<button class="button secondary" onclick="restoreSentence('${sentence.id}')">다시 active로</button>`
+              }
+              <button class="button danger" onclick="deleteSentence('${sentence.id}', '${type}')">삭제</button>
             </div>
           </div>
         `;
@@ -298,22 +345,26 @@
     }
 
     function archiveSentence(id) {
-      const sentences = getSentences().map(s => s.id === id ? { ...s, status: 'archive', updatedAt: new Date().toISOString() } : s);
+      const sentences = getSentences().map(s =>
+        s.id === id ? { ...s, status: 'archive', updatedAt: new Date().toISOString() } : s
+      );
       saveSentences(sentences);
       renderSentenceList('active');
     }
 
     function restoreSentence(id) {
-      const sentences = getSentences().map(s => s.id === id ? { ...s, status: 'active', updatedAt: new Date().toISOString() } : s);
+      const sentences = getSentences().map(s =>
+        s.id === id ? { ...s, status: 'active', updatedAt: new Date().toISOString() } : s
+      );
       saveSentences(sentences);
       renderSentenceList('archive');
     }
 
-    function deleteSentence(id) {
+    function deleteSentence(id, type) {
       if (!confirm('이 문장을 삭제할까요?')) return;
       const sentences = getSentences().filter(s => s.id !== id);
       saveSentences(sentences);
-      renderSentenceList(document.querySelector('#sentenceListContainer').innerHTML.includes('다시 active로') ? 'archive' : 'active');
+      renderSentenceList(type);
     }
 
     function getActiveSentences() {
@@ -330,8 +381,8 @@
     function startPractice() {
       showScreen('practiceScreen');
       updatePracticeControls();
-      const sentence = pickRandomSentence();
 
+      const sentence = pickRandomSentence();
       const empty = document.getElementById('practiceEmpty');
       const content = document.getElementById('practiceContent');
 
@@ -358,9 +409,12 @@
       textEl.textContent = appSettings.captionOn ? sentence.text : '캡션이 꺼져 있습니다';
       document.getElementById('practiceMeta').textContent = `누적 발화 ${sentence.count} / ${SETTINGS.archiveAt}`;
       document.getElementById('roundCounter').textContent = `${practiceState.currentRound} / ${SETTINGS.roundsPerSession}`;
-      document.getElementById('practiceProgressBar').style.width = `${Math.min((sentence.count / SETTINGS.archiveAt) * 100, 100)}%`;
+      document.getElementById('practiceProgressBar').style.width =
+        `${Math.min((sentence.count / SETTINGS.archiveAt) * 100, 100)}%`;
+
       const remaining = Math.max(SETTINGS.archiveAt - sentence.count, 0);
-      document.getElementById('sessionInfo').textContent = `이번 문장 ${practiceState.currentRound}/${SETTINGS.roundsPerSession}회 · 아카이브까지 ${remaining}회 남음`;
+      document.getElementById('sessionInfo').textContent =
+        `이번 문장 ${practiceState.currentRound}/${SETTINGS.roundsPerSession}회 · 아카이브까지 ${remaining}회 남음`;
     }
 
     function estimateWaitMs(text) {
@@ -373,16 +427,20 @@
     function speakText(text, onEnd) {
       if (!('speechSynthesis' in window)) {
         alert('이 브라우저는 음성 읽기를 지원하지 않습니다. 크롬을 권장합니다.');
-        onEnd?.();
+        if (onEnd) onEnd();
         return;
       }
 
       const appSettings = getAppSettings();
       window.speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = appSettings.speechRate;
-      utterance.onend = () => onEnd?.();
+      utterance.onend = function () {
+        if (onEnd) onEnd();
+      };
+
       practiceState.speakingUtterance = utterance;
       window.speechSynthesis.speak(utterance);
     }
@@ -391,7 +449,8 @@
       if (!practiceState.isRunning) return;
 
       const sentences = getSentences();
-      let sentence = sentences.find(s => s.id === practiceState.currentSentenceId);
+      const sentence = sentences.find(s => s.id === practiceState.currentSentenceId);
+
       if (!sentence || sentence.status !== 'active') {
         moveToNextSentence();
         return;
@@ -405,28 +464,36 @@
       document.getElementById('practiceStatus').textContent = 'AI가 문장을 2번 읽는 중...';
       renderPracticeSentence(sentence);
 
-      speakText(sentence.text, () => {
+      speakText(sentence.text, function () {
         if (!practiceState.isRunning) return;
-        setTimeout(() => {
+
+        setTimeout(function () {
           if (!practiceState.isRunning) return;
-          speakText(sentence.text, () => {
+
+          speakText(sentence.text, function () {
             if (!practiceState.isRunning) return;
 
             document.getElementById('practiceStatus').textContent = '이제 따라 말하세요...';
             const waitMs = estimateWaitMs(sentence.text);
 
-            practiceState.timeoutId = setTimeout(() => {
+            practiceState.timeoutId = setTimeout(function () {
               if (!practiceState.isRunning) return;
+
               practiceState.currentRound += 1;
               incrementSentenceCount(sentence.id);
+
               const updatedSentence = getSentences().find(s => s.id === sentence.id);
               renderPracticeSentence(updatedSentence);
               document.getElementById('practiceStatus').textContent = '1회 카운트 완료';
 
               if (practiceState.currentRound >= SETTINGS.roundsPerSession) {
-                setTimeout(() => moveToNextSentence(), 1000);
+                setTimeout(function () {
+                  moveToNextSentence();
+                }, 1000);
               } else {
-                setTimeout(() => runPracticeRound(), 1000);
+                setTimeout(function () {
+                  runPracticeRound();
+                }, 1000);
               }
             }, waitMs);
           });
@@ -434,10 +501,60 @@
       });
     }
 
+    function incrementSentenceCount(id) {
+      const sentences = getSentences().map(s => {
+        if (s.id !== id) return s;
+        const newCount = s.count + 1;
+        return {
+          ...s,
+          count: newCount,
+          status: newCount >= SETTINGS.archiveAt ? 'archive' : 'active',
+          updatedAt: new Date().toISOString()
+        };
+      });
+
+      saveSentences(sentences);
+    }
+
+    function moveToNextSentence() {
+      const nextSentence = pickRandomSentence();
+
+      if (!nextSentence) {
+        stopPractice();
+        alert('모든 active 문장이 아카이브되었거나 연습할 문장이 없습니다.');
+        showScreen('homeScreen');
+        return;
+      }
+
+      practiceState.currentSentenceId = nextSentence.id;
+      practiceState.currentRound = 0;
+      renderPracticeSentence(nextSentence);
+      runPracticeRound();
+    }
+
+    function stopPractice() {
+      practiceState.isRunning = false;
+      practiceState.currentRound = 0;
+      practiceState.currentSentenceId = null;
+
+      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+      showScreen('homeScreen');
+    }
+
+    function skipSentence() {
+      if (!practiceState.isRunning) return;
+      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      moveToNextSentence();
+    }
+
     function updatePracticeControls() {
       const appSettings = getAppSettings();
       document.getElementById('speedDisplay').textContent = `${appSettings.speechRate.toFixed(1)}x`;
-      document.getElementById('captionToggleBtn').textContent = appSettings.captionOn ? '캡션 끄기' : '캡션 켜기';
+      document.getElementById('captionToggleBtn').textContent =
+        appSettings.captionOn ? '캡션 끄기' : '캡션 켜기';
     }
 
     function changeSpeed(delta) {
@@ -458,58 +575,6 @@
       if (sentence) renderPracticeSentence(sentence);
     }
 
-    function incrementSentenceCount(id) {
-      const sentences = getSentences().map(s => {
-        if (s.id !== id) return s;
-        const newCount = s.count + 1;
-        return {
-          ...s,
-          count: newCount,
-          status: newCount >= SETTINGS.archiveAt ? 'archive' : 'active',
-          updatedAt: new Date().toISOString()
-        };
-      });
-      saveSentences(sentences);
-    }
-
-    function moveToNextSentence() {
-      const nextSentence = pickRandomSentence();
-      if (!nextSentence) {
-        stopPractice();
-        alert('모든 active 문장이 아카이브되었거나 연습할 문장이 없습니다.');
-        showScreen('homeScreen');
-        return;
-      }
-
-      practiceState.currentSentenceId = nextSentence.id;
-      practiceState.currentRound = 0;
-      renderPracticeSentence(nextSentence);
-      runPracticeRound();
-    }
-
-    function stopPractice() {
-      practiceState.isRunning = false;
-      practiceState.currentRound = 0;
-      practiceState.currentSentenceId = null;
-      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      document.getElementById('practiceStatus').textContent = '연습이 중지되었습니다.';
-      showScreen('homeScreen');
-    }
-
-    function skipSentence() {
-      if (!practiceState.isRunning) return;
-      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      moveToNextSentence();
-    }
-
-    function manualRepeatNow() {
-      if (!practiceState.isRunning) return;
-      if (practiceState.timeoutId) clearTimeout(practiceState.timeoutId);
-      runPracticeRound();
-    }
-
     function escapeHtml(text) {
       return text
         .replace(/&/g, '&amp;')
@@ -518,6 +583,8 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+    updatePracticeControls();
   </script>
 </body>
 </html>
