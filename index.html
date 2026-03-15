@@ -480,7 +480,7 @@
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    const APP_SETTINGS_KEY = "multi_practice_app_settings_v2";
+    const APP_SETTINGS_KEY = "multi_practice_app_settings_v3";
 
     const SETTINGS = {
       roundsPerSession: 10,
@@ -494,7 +494,7 @@
     const CATEGORY_INFO = {
       english: {
         label: "영어",
-        collectionName: "englishItems",
+        collectionName: "sentences",
         placeholder: "연습하고 싶은 영어 문장을 입력하세요.",
         hint: "예: I was going to call you yesterday, but I got caught up with work.",
         speechLang: "en-US"
@@ -666,10 +666,32 @@
         const q = query(getItemCollectionRef(category), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
 
-        const items = snapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        }));
+        const items = snapshot.docs.map(docSnap => {
+          const data = docSnap.data();
+
+          if (category === "bible") {
+            return {
+              id: docSnap.id,
+              kind: "bible",
+              reference: data.reference || "",
+              text: data.text || "",
+              count: data.count || 0,
+              status: data.status || "active",
+              createdAt: data.createdAt || 0,
+              updatedAt: data.updatedAt || 0
+            };
+          }
+
+          return {
+            id: docSnap.id,
+            kind: "normal",
+            text: data.text || "",
+            count: data.count || 0,
+            status: data.status || "active",
+            createdAt: data.createdAt || 0,
+            updatedAt: data.updatedAt || 0
+          };
+        });
 
         cacheMap[category] = items;
         return items;
@@ -690,11 +712,13 @@
 
     function pickRandomItem(excludeId = null) {
       const active = getActiveItems().filter(item => item.id !== excludeId);
+
       if (active.length === 0) {
         const fallback = getActiveItems();
         if (fallback.length === 0) return null;
         return fallback[Math.floor(Math.random() * fallback.length)];
       }
+
       return active[Math.floor(Math.random() * active.length)];
     }
 
@@ -828,7 +852,6 @@
           }
 
           await addDoc(getItemCollectionRef(), {
-            kind: "bible",
             reference,
             text,
             count: 0,
@@ -848,7 +871,6 @@
           }
 
           await addDoc(getItemCollectionRef(), {
-            kind: "normal",
             text,
             count: 0,
             status: "active",
@@ -1316,12 +1338,7 @@
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       updateAuthUI();
-
-      if (currentUser) {
-        showScreen("categoryScreen");
-      } else {
-        showScreen("categoryScreen");
-      }
+      showScreen("categoryScreen");
     });
 
     updatePracticeControls();
