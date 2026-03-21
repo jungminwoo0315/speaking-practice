@@ -10,8 +10,8 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #222;
+      background: #0b1220;
+      color: #f3f4f6;
     }
 
     .app {
@@ -32,10 +32,11 @@
     h1, h2, h3, p { margin-top: 0; }
 
     .card {
-      background: white;
+      background: #111827;
+      border: 1px solid #1f2937;
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
       margin-bottom: 16px;
     }
 
@@ -61,7 +62,7 @@
     }
 
     .primary { background: #2563eb; color: white; }
-    .secondary { background: #e5e7eb; color: #111827; }
+    .secondary { background: #374151; color: #f9fafb; }
     .danger { background: #dc2626; color: white; }
     .success { background: #16a34a; color: white; }
     .warning { background: #f59e0b; color: white; }
@@ -71,10 +72,16 @@
       width: 100%;
       padding: 14px;
       border-radius: 12px;
-      border: 1px solid #d1d5db;
+      border: 1px solid #374151;
       font-size: 16px;
       margin-bottom: 12px;
-      background: white;
+      background: #0f172a;
+      color: #f9fafb;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #9ca3af;
     }
 
     .hidden { display: none; }
@@ -92,11 +99,12 @@
       margin-bottom: 14px;
       word-break: break-word;
       white-space: pre-wrap;
+      color: #f9fafb;
     }
 
     .meta {
       font-size: 15px;
-      color: #4b5563;
+      color: #cbd5e1;
       margin-bottom: 10px;
       white-space: pre-wrap;
     }
@@ -104,7 +112,7 @@
     .progress-wrap {
       width: 100%;
       height: 12px;
-      background: #e5e7eb;
+      background: #1f2937;
       border-radius: 999px;
       overflow: hidden;
       margin: 10px 0 16px;
@@ -112,34 +120,35 @@
 
     .progress-bar {
       height: 100%;
-      background: #2563eb;
+      background: #3b82f6;
       width: 0%;
     }
 
     .list-item {
-      border: 1px solid #e5e7eb;
+      border: 1px solid #243041;
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 10px;
-      background: #fff;
+      background: #0f172a;
     }
 
     .small {
       font-size: 14px;
-      color: #6b7280;
+      color: #94a3b8;
     }
 
     .status {
       font-size: 18px;
       font-weight: 700;
       margin-top: 10px;
-      color: #1f2937;
+      color: #e5e7eb;
     }
 
     .count-big {
       font-size: 42px;
       font-weight: 900;
       margin: 12px 0;
+      color: #f9fafb;
     }
 
     .center-box {
@@ -149,9 +158,10 @@
       padding: 16px;
       text-align: center;
       box-shadow: none;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #374151;
       border-radius: 16px;
-      background: white;
+      background: #0f172a;
+      color: #f9fafb;
     }
 
     .user-box {
@@ -165,8 +175,8 @@
       display: inline-block;
       padding: 6px 10px;
       border-radius: 999px;
-      background: #eef2ff;
-      color: #1e40af;
+      background: #1e3a8a;
+      color: #dbeafe;
       font-size: 13px;
       font-weight: 700;
     }
@@ -179,10 +189,11 @@
     .muted-box {
       padding: 14px;
       border-radius: 14px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: #0f172a;
+      border: 1px solid #253045;
       margin-bottom: 14px;
       white-space: pre-wrap;
+      color: #cbd5e1;
     }
 
     .category-grid {
@@ -199,7 +210,7 @@
       cursor: pointer;
       font-weight: 900;
       color: white;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
     }
 
     .cat-english { background: #2563eb; }
@@ -213,19 +224,19 @@
     }
 
     .result-good {
-      color: #15803d;
+      color: #4ade80;
       font-weight: 800;
     }
 
     .result-bad {
-      color: #b91c1c;
+      color: #f87171;
       font-weight: 800;
     }
 
     .tab-label {
       font-size: 13px;
       font-weight: 700;
-      color: #374151;
+      color: #cbd5e1;
       margin-bottom: 6px;
     }
 
@@ -311,7 +322,7 @@
           <button class="button primary" onclick="addItem()">저장</button>
           <button class="button secondary" onclick="goToCategoryHome()">뒤로</button>
         </div>
-        <p class="small">active 상태로 저장되고, 누적 100회가 되면 archive로 이동합니다.</p>
+        <p class="small">active 상태로 저장되고, 누적 30회가 되면 archive로 이동합니다.</p>
       </div>
     </section>
 
@@ -484,7 +495,7 @@
 
     const SETTINGS = {
       roundsPerSession: 10,
-      archiveAt: 100,
+      archiveAt: 30,
       waitMultiplier: 1.5,
       minWaitMs: 2500,
       maxWaitMs: 12000,
@@ -774,7 +785,7 @@
 
       const info = getCategoryInfo();
       document.getElementById("categoryHomeDesc").textContent =
-        `${info.label} 항목을 입력하고, 듣고 발화하기 또는 보고 타자치기로 연습할 수 있습니다.\n두 방식 모두 같은 count에 합산됩니다.`;
+        `${info.label} 항목을 입력하고, 듣고 발화하기 또는 보고 타자치기로 연습할 수 있습니다.\n두 방식 모두 같은 count에 합산됩니다.\n누적 30회가 되면 자동으로 archive로 이동합니다.`;
 
       showScreen("categoryHomeScreen");
     }
