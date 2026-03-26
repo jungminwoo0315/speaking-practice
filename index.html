@@ -770,7 +770,10 @@
     }
 
     function normalizeTextIgnoringSpaces(text, category = currentCategory) {
-      return normalizeText(text, category).replace(/\s+/g, "");
+      let value = normalizeText(text, category);
+      value = value.replace(/\s+/g, "");
+      value = value.replace(/['.,]/g, "");
+      return value;
     }
 
     function goToCategoryHome() {
