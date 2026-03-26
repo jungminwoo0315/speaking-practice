@@ -322,7 +322,7 @@
           <button class="button primary" onclick="addItem()">저장</button>
           <button class="button secondary" onclick="goToCategoryHome()">뒤로</button>
         </div>
-        <p class="small">active 상태로 저장되고, 누적 30회가 되면 archive로 이동합니다.</p>
+        <p class="small">active 상태로 저장되고, 누적 20회가 되면 archive로 이동합니다.</p>
       </div>
     </section>
 
@@ -495,7 +495,7 @@
 
     const SETTINGS = {
       roundsPerSession: 10,
-      archiveAt: 30,
+      archiveAt: 20,
       waitMultiplier: 1.5,
       minWaitMs: 2500,
       maxWaitMs: 12000,
@@ -760,14 +760,17 @@
     function normalizeText(text, category = currentCategory) {
       let value = String(text || "")
         .replace(/\r/g, "")
-        .trim()
-        .replace(/\s+/g, " ");
+        .trim();
 
       if (category === "english") {
         value = value.toLowerCase();
       }
 
       return value;
+    }
+
+    function normalizeTextIgnoringSpaces(text, category = currentCategory) {
+      return normalizeText(text, category).replace(/\s+/g, "");
     }
 
     function goToCategoryHome() {
@@ -785,7 +788,7 @@
 
       const info = getCategoryInfo();
       document.getElementById("categoryHomeDesc").textContent =
-        `${info.label} 항목을 입력하고, 듣고 발화하기 또는 보고 타자치기로 연습할 수 있습니다.\n두 방식 모두 같은 count에 합산됩니다.\n누적 30회가 되면 자동으로 archive로 이동합니다.`;
+        `${info.label} 항목을 입력하고, 듣고 발화하기 또는 보고 타자치기로 연습할 수 있습니다.\n두 방식 모두 같은 count에 합산됩니다.\n누적 20회가 되면 자동으로 archive로 이동합니다.`;
 
       showScreen("categoryHomeScreen");
     }
@@ -1303,8 +1306,8 @@
       const answer = document.getElementById("typingAnswerInput").value;
       const target = getTypingTargetText(item);
 
-      const normalizedAnswer = normalizeText(answer, currentCategory);
-      const normalizedTarget = normalizeText(target, currentCategory);
+      const normalizedAnswer = normalizeTextIgnoringSpaces(answer, currentCategory);
+      const normalizedTarget = normalizeTextIgnoringSpaces(target, currentCategory);
 
       if (!normalizedAnswer) {
         alert("정답을 입력해 주세요.");
@@ -1341,7 +1344,8 @@
     window.submitTypingAnswer = submitTypingAnswer;
 
     document.getElementById("typingAnswerInput").addEventListener("keydown", function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
         submitTypingAnswer();
       }
     });
